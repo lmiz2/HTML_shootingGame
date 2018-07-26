@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+  <meta name="description" content="">
+  <!-- <link rel="stylesheet" type="text/css" href="style.css"> -->
+
+  <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+  <script type="text/javascript">
+    window.onload = function(){
+      var $startBtn = $('#startBtn');
+      var $gameWindow = $('.gameWindow');
+      var $statusBar = $('#right');
+      $startBtn.on('click',function(){
+        $startBtn.animate({
+          opacity : 0
+        },1000,function(){
+          $gameWindow.empty();
+          $gameWindow.css({
+            'background-image' :"url(./aaa2.png)",
+            'background-repeat':'round'
+          });
+          var timerID = setTimeout(function(){
+            startGame();
+          },1000,function(){
+            clearTimeout(timerID);
+          });
+        });
+//
+      });
+      screenAni(1,'');
+      function screenAni(opacityTo,where){
+        var leftTo = 0;
+        var leftTo2 = 0;
+        if(!opacityTo){
+          leftTo = 200;
+          leftTo2 = 200;
+        }else {
+          leftTo = '25%';
+          leftTo2 = '36%';
+        }
+        $gameWindow.animate({
+          opacity : opacityTo
+        },1000);
+        $statusBar.animate({
+          opacity : opacityTo
+        },1000);
+        $('#back').animate({
+          opacity : opacityTo,
+        },500);
+        $('#top *').animate({
+          left : leftTo2,
+          opacity : opacityTo
+        },1000,function(){
+          if(opacityTo==0){
+            goto(where);
+          }
+        });
+
+        function goto(selector){
+          window.location.replace(selector)
+        }
+      }
+
+      $('#back').on('click',function(){
+        screenAni(0,'./menu.html')
+      });
+
+      function startGame(){//---------------------------------------
+        var totalScore = 0;
+        var level = 1;
+        var enm = null;
+        var enm_boss = null;
+        var gameTime = null;
+        var user = null;
+        var userStatus = null;
+        var fireEffect = null;
+        var hitEffect = null;
+        var pistol = null;
+        var rifle = null;
+        var bow = null;
+        var tmpArr = null;
+        var phone = null;
+        var rockOn = null;
+        var missle = null;
+        var boom = null;
+        var enemyId = 0;
+        var fireLocX = 0;
+        var fireLocY = 0;
+        var timeSlot = 0;
+        var nowX = 0;
+        var nowY = 0;
+        var weaponWindow = null;
+        var hitEvent = null;
+        var focusTarget = null;
+        var stack = null;
+        var deadCnt = 0;
+        var scrWindow = null;
+        var lvWindow = null;
+        var nLvBtn = null;
+        var enemyMovetimer = null;
+        init();
+        levelstart(level);
+
+        function init(){
+          // $gameWindow.empty();
+          // enm = null;
+          // enm_boss = null;
+          // gameTime = null;
+          // user = null;
+          // userStatus = null;
+          // fireEffect = null;
+          // hitEffect = null;
+          // pistol = null;
+          // rifle = null;
+          // bow = null;
+          // tmpArr = null;
+          // phone = null;
+          // rockOn = null;
+          // missle = null;
+          // boom = null;
+          // enemyId = 0;
+          // fireLocX = 0;
+          // fireLocY = 0;
+          // timeSlot = 0;
+          // nowX = 0;
+          // nowY = 0;
+          // weaponWindow = null;
+          // hitEvent = null;
+          // focusTarget = null;
+          // stack = null;
+          // deadCnt = 0;
+          // scrWindow = null;
+          // lvWindow = null;
+          // nLvBtn = null;
+          userStatus = {
+            hp : 100,
+            weapon : 'pistol',
+            power : 1,
+            src : './character.png',
+            weapon_have : ""
+          };
+          enm = {
+            name : 'fish',
+            hp : 5,
+            power : 5,
+            size : '50px',
+            left : 0,
+            top : 0,
+            src : './fish.png'
+          };
+          enm_boss= {
+            name : 'gogi',
+            hp : 100,
+            power : 10,
+            size : '100px',
+            left : 0,
+            top : 0,
+            src : './gogi2.png'
+          };
+          $gameWindow.append('<img id="character" src="./chracter0.png">');
+          $gameWindow.append('<img id="weaponFire" src="./성스런 폭발.png">');
+          $gameWindow.append('<img id="hitEffect" src="./타격2.png" >');
+          $statusBar.append('<img id="pistol">');
+          $statusBar.append('<img id="rifle">');
+          $statusBar.append('<img id="bow">');
+          $statusBar.append('<img id="phone">');
+          weaponWindow = $('#right');
+          pistol = $('#pistol');
+          rifle = $('#rifle');
+          bow = $('#bow');
+          phone = $('#phone');
+          fireEffect = $('#weaponFire');
+          hitEffect = $('#hitEffect');
+          user = $('#character');
+          user.css({
+            left : 50,
+            bottom : 50,
+            position : 'absolute'
+          });
+          fireLocX = 102;
+          fireLocY = 392;
+          fireEffect.css({
+            'height':50,
+            'width':70,
+            left:fireLocX,
+            top:fireLocY,
+            position:'absolute',
+            opacity:0
+          });
+          hitEffect.css({
+            'height':80,
+            'width':80,
+            left:0,
+            top:0,
+            position:'absolute',
+            opacity:0
+          });
+          pistol.attr('src','./revolver.jpg');
+          pistol.addClass('focused');
+          rifle.attr('src','./rifle.png');
+          bow.attr('src','./bow.png');
+          phone.attr('src','./phone.png');
+          $gameWindow.bind('mousemove',function(e){
+            nowX = e.pageX;
+            nowY = e.pageY-120;
+            $("#log").text("X: " + nowX + ", Y: " + nowY);
+          });
+          $gameWindow.append('<span id="nowLv"></span><span id="score"></span>');
+          lvWindow = $('#nowLv');
+          scrWindow = $('#score');
+        }//init() End-----------------------------------------------------------
+
+        function levelstart(level){
+          weaponChange('pistol');
+          $gameWindow.append('<h1 id="lvDisp">스테이지 - '+level+'</h1>');
+
+          var timer = setTimeout(function(){
+            $('h1').remove('#lvDisp');
+            processScreen();
+          },3000);
+        }
+        function processScreen(){
+          timeSlot = 0;
+          var hitImage = '';
+          var hitXY = $();
+          var prevTS = 1;
+          var rapidFireTimer = null;
+
+          weaponWindow.on('click','img',function(){
+            var $this = $(this);
+            if($this.attr('id') == phone){
+              weaponChange($this.attr('id'));
+            } else {
+              weaponChange($this.attr('id'));
+            }
+          });
+          $gameWindow.on('mousedown',function(e){
+            console.log('mouseDown');
+            if(rapidFireTimer){
+              clearInterval(rapidFireTimer);
+              rapidFireTimer = null;
+            }
+            if(userStatus.weapon == 'rifle'){
+              rapidFireTimer = setInterval(function(){
+                prevTS = fireAnimation(userStatus.weapon,prevTS ,timeSlot,nowX,nowY);
+              },100);
+            }else {
+              prevTS = fireAnimation(userStatus.weapon,prevTS ,timeSlot,nowX,nowY);
+            }
+          }).on('mouseup mouseleave', function(){
+
+              clearInterval(rapidFireTimer);
+              rapidFireTimer = null;
+
+          });
+
+          $gameWindow.on('mouseenter','img.enemy',function(e){// 히트 감지-----------------------
+            console.log('enemyFocused');
+            focusTarget = $(this);
+          });
+          $gameWindow.on('mouseleave','img.enemy',function(e){// 히트 감지-----------------------
+            console.log('enemyFocusing out');
+              focusTarget = null;
+          });
+
+          gameTime = setInterval(function(){
+            timeSlot++;
+            if(timeSlot > 60000){
+              timeSlot = 0;
+              prevTS = 0;
+            }
+            //게임의 모든 기타요소의 움직임이 이루어지는곳.
+            processCharacter(timeSlot/50);
+          },10);
+
+          processEnemy();
+        }
+
+        function processCharacter(cnt){
+          user.attr('src','./chracter'+parseInt(cnt%4)+'.png');
+        }
+
+        function processEnemy(){
+          stack = [];
+          for(var i = 0 ; i < (level+1)*5 ; i++){
+            stack.push(makeEnemy());
+          }
+          enemyMovetimer = setInterval(function(){
+            $.each(stack,function(index){
+              stack[index].move();
+              if(stack[index].getX() < 1){
+                $('img').remove('#'+stack[index].getID());
+                stack.splice(index,1);
+                levelLose();
+
+                return false;
+              }
+            });
+          },50);
+
+        }
+
+        function findEnemyById(id){
+          var res = null;
+          $.each(stack,function(index){
+            if(stack[index].getID() == id){
+              res = stack[index];
+              return false;
+            }
+          });
+          return res;
+        }
+
+        function findEnemyByXY(x,y){
+          var res = null;
+          $.each(stack,function(index){
+            var fishX = parseInt(stack[index].getX());
+            var fishY = parseInt(stack[index].getY());
+            var inputX = parseInt(x);
+            var inputY = parseInt(y);
+            if((fishX-50 < inputX &&  fishX + 50 > inputX)&&(fishY-25 < inputY &&  fishY + 25 > inputY)){
+              res = stack[index];
+              console.log('hit');
+              return false;
+            }
+          });
+          return res;
+        }
+
+        function findEnemyByXYarr(x,y){
+          var res = [];
+          $.each(stack,function(index){
+            var fishX = parseInt(stack[index].getX());
+            var fishY = parseInt(stack[index].getY());
+            var inputX = parseInt(x);
+            var inputY = parseInt(y);
+            if((fishX- 50 < inputX &&  fishX +200 > inputX)&&(fishY-100 < inputY &&  fishY + 200 > inputY)){
+              res.push(stack[index]);
+              console.log('hit');
+            }
+          });
+          return res;
+        }
+
+        function killEnemy(id,$killtarget){
+          $.each(stack,function(index){
+            if(stack[index].getID() == id){
+              if($killtarget.attr('id') == stack[index].getID()){
+                $killtarget = null;
+              }
+              deadAni(stack[index].objs.css('left'), parseInt(stack[index].objs.css('top'))-30);
+              $('img').remove('#'+stack[index].getID());
+              stack.splice(index,1);
+              return false;
+            }
+          });
+          totalScore += level*1;
+          scrWindow.text(totalScore);
+          if(stack.length == 0){
+            levelWin();
+          }
+
+        }
+
+        function deadAni(x,y){
+          deadCnt++;
+          $gameWindow.append('<img id="dead'+deadCnt+'" class="deadAN" src="./dead0.png" width="100" height="100">');
+          var deadImg = $('#dead'+deadCnt);
+          deadImg.css({
+            position:'absolute',
+            left : x,
+            top : y
+          });
+          var cnt = 1;
+          var timer = setInterval(function(){
+            deadImg.attr('src','./dead'+cnt+'.png');
+            cnt++;
+            if(cnt > 3){
+              clearInterval(timer);
+              $('img').remove('.deadAN');
+            }
+          },200);
+        }
+
+        function makeEnemy(){
+          var fish = new Enemy();
+          $gameWindow.append('<img id="enemy'+enemyId+'" src="./fish.png">');
+          var $jqobj = $('#enemy'+enemyId++);
+          $jqobj.addClass('enemy');
+          fish.init($jqobj,(100+(level*15)),Math.floor(Math.random()*5)+1,'fish',Math.floor(Math.random()*200*level)+1200,
+          Math.floor(Math.random()*450));
+          return fish;
+        }
+
+        function weaponChange(weaponName){
+          userStatus.weapon = weaponName;
+          if(weaponName == 'pistol'){
+            fireEffect.attr('src','./성스런 폭발.png');
+            hitEffect.attr('src','./타격2.png');
+          }else if (weaponName == 'rifle'){
+            fireEffect.attr('src','./포화0.png');
+            hitEffect.attr('src','./riflehit.png');
+          }else if (weaponName == 'bow'){
+            fireEffect.attr('src','./투명.png');
+            hitEffect.attr('src','./투명.png');
+          }else if (weaponName == 'phone'){
+            // hitEffect.attr('src','./explosion1.png');
+          }
+          userStatus.power = weapons(weaponName).weapon_power;
+          weaponWindow.children().removeClass('focused');
+          $('#'+weaponName).addClass('focused');
+
+        }
+
+        function fireAnimation(weaponName,prevTimeSlot,nowTimeSlot,mouseX,mouseY){
+          if(weaponName == 'pistol' && (nowTimeSlot-prevTimeSlot)> 50){
+            fireEffect.css({
+              opacity : 1,
+              top : 372,
+              left : 80
+            });
+            fireEffect.show(50,function(){
+              fireEffect.hide(50,function(){
+              });
+            });
+
+            hitEffect.css({
+              opacity : 1,
+              top : mouseY-40,
+              left : mouseX-40
+            });
+            hitEffect.show(100,function(){
+              hitEffect.hide(100,function(){
+              });
+            });
+
+            if(focusTarget){
+              var tmp = findEnemyById(focusTarget.attr('id'));
+              var deadOrAlive = findEnemyById(focusTarget.attr('id')).hited(userStatus.power);
+              if(deadOrAlive == 'dead'){
+                killEnemy(focusTarget.attr('id'),focusTarget);
+                focusTarget = null;
+                console.log('남은 적 : '+stack.length);
+              }else {
+              }
+            }
+            return nowTimeSlot;
+
+          } else if(weaponName == 'rifle'){
+            fireEffect.css({
+              opacity : 1,
+              top : 372,
+              left : 80
+            });
+            fireEffect.show(50,function(){
+              fireEffect.hide(50,function(){
+              });
+            });
+
+            hitEffect.css({
+              opacity : 1,
+              top : mouseY-40,
+              left : mouseX-40
+            });
+            hitEffect.show(50,function(){
+              hitEffect.hide(50,function(){
+              });
+            });
+            if(focusTarget){
+              console.log('fire : '+userStatus.power);
+              var tmp = findEnemyById(focusTarget.attr('id'));
+              var deadOrAlive = findEnemyById(focusTarget.attr('id')).hited(userStatus.power);
+              if(deadOrAlive == 'dead'){
+                killEnemy(focusTarget.attr('id'),focusTarget);
+                focusTarget = null;
+                console.log('남은 적 : '+stack.length);
+              }
+            }
+            return nowTimeSlot;
+
+          } else if(weaponName == 'bow' && !tmpArr){
+            $gameWindow.append('<img id="arrow" src="./arrow.png">');
+            tmpArr = $('#arrow');
+            tmpArr.css({
+              position: 'absolute',
+              top:386,
+              left:80
+            });
+            var arrowLoc = setInterval(function(){
+              // console.log(tmpArr.offset());
+              var arrowtgt = findEnemyByXY(tmpArr.css('left'), tmpArr.css('top'));
+              if(arrowtgt){
+                var deadOrAlive = arrowtgt.hited(weapons('bow').weapon_power);
+                if(deadOrAlive == 'dead'){
+                  killEnemy(arrowtgt.objs.attr('id'),arrowtgt.objs);
+                  console.log('남은 적 : '+stack.length);
+                }
+              }
+
+            },14);
+            tmpArr.animate({
+              top : mouseY-14 ,
+              left : mouseX-50
+            },700,function(){
+              $('img').remove('#arrow');
+              tmpArr = null;
+              clearInterval(arrowLoc);
+            });
+            return nowTimeSlot;
+          } else if (weaponName == 'phone' && (nowTimeSlot-prevTimeSlot)> 30){
+            // var tmpLeft = mouseX;
+            if(!rockOn){
+              $gameWindow.append('<img id="rockon" src="./rockon.png">');
+              rockOn = $('#rockon');
+              rockOn.css({
+                width : 100,
+                height : 30,
+                left : mouseX-60,
+                top : mouseY-25,
+                position: 'absolute'
+              });
+              var timer = setTimeout(function(){
+                $('img').remove('#rockon');
+                rockOn = null;
+                if(!missle){
+                  $gameWindow.append('<img id="missle" src="./missle1.png" width="200" height="200">');
+                  missle = $('#missle');
+                  missle.css({
+                    width : 70,
+                    height : 100,
+                    left : mouseX-40,
+                    top : -100,
+                    position: 'absolute'
+                  });
+                  missle.animate({
+                    top : mouseY - 70
+                  },500,function(){
+                    $('img').remove('#missle');
+                    missle = null;
+                    $gameWindow.append('<img id="explos" src="./explosion0.png">');
+                    boom = $('#explos');
+                    boom.css({
+                      width : 200,
+                      height : 200,
+                      left : mouseX-100,
+                      top : mouseY-180,
+                      'min-width' : 200,
+                      'min-height' : 200,
+                      position: 'absolute'
+                    });
+                    var boomtgt = findEnemyByXYarr(mouseX,mouseY);
+                    console.log(boomtgt);
+                    $.each(boomtgt,function(index){
+                      var deadOrAlive = boomtgt[index].hited(weapons('phone').weapon_power);
+                      if(deadOrAlive == 'dead'){
+                        killEnemy(boomtgt[index].objs.attr('id'),boomtgt[index].objs);
+                        console.log('남은 적 : '+stack.length);
+                      }
+                    });
+
+                    var inx = 1;
+                    var boomTimer = setInterval(function(){
+                      inx++;
+                      if(inx < 16){
+                        boom.attr('src','./explosion'+inx+'.png');
+                      }else if(inx == 16){
+                        boom.attr('src','./투명.png');
+                      }else if (inx > 16){
+                        $('img').remove('#explos');
+                        boom = null;
+                        clearInterval(boomTimer);
+                        inx = 0;
+                      }
+                    },100);
+                  });
+                }
+              },3000);
+            }
+            return nowTimeSlot;
+          }
+          return 0;
+        }
+
+        function levelWin(){
+          console.log('lv win');
+          clearInterval(gameTime);
+          clearInterval(enemyMovetimer);
+          $gameWindow.off('mouseenter mouseleave mousedown');
+          level++;
+          $gameWindow.append('<div id="nextLv"><h1>승리!</h1><br><br><h3 id="nLvBtn">다음 스테이지로</h3></div>');
+          nLvBtn = $('#nLvBtn');
+          nLvBtn.one('click',function(){
+            $('div').remove('#nextLv');
+            levelstart(level);
+          });
+        }
+
+        function levelLose(){
+          $gameWindow.append('<div id="nextLv"><h1>패배!</h1><br><br><h3 id="nLvBtn">다시하기</h3></div>');
+          clearInterval(enemyMovetimer);
+          clearInterval(gameTime);
+          $gameWindow.off('mouseenter mouseleave mousedown');
+          nLvBtn = $('#nLvBtn');
+          nLvBtn.one('click',function(){
+            $('div').remove('#nextLv');
+            $('img').remove(".enemy");
+            levelstart(level);
+          });
+        }
+
+        function attack(x,y){
+
+        }
+
+        function objMoving(){
+
+        }
+
+        function weapons(weaponName){
+          var returnWeapon = null;
+          switch (weaponName) {
+            case 'pistol':
+              returnWeapon = {
+                weapon_power : 45*(1+(totalScore*(0.01))),
+                weapon_fireSpeed : 0.5
+              }
+              break;
+            case 'rifle':
+              returnWeapon = {
+                weapon_power : 12*(1+(totalScore*(0.01))),
+                weapon_fireSpeed : 0.1
+              }
+              break;
+            case 'phone':
+              returnWeapon = {
+                weapon_power : 150*(1+(totalScore*(0.01))),
+                weapon_fireSpeed : 5
+              }
+              break;
+            case 'bow':
+              returnWeapon = {
+                weapon_power : 100*(1+(totalScore*(0.01))),
+                weapon_fireSpeed : 3,
+              }
+            default:
+          }
+          return returnWeapon;
+        }
+      }//startGame End
+    };//onload End
+
+    function Enemy(){
+      this.objs = null;
+      this.hp = null;
+      this.speed = null;
+      this.id = null;
+      this.type = null;
+    }
+    Enemy.prototype.init = function (objs,hp,speed,type,x,y) {
+      this.objs = objs;
+      this.hp = hp;
+      this.speed = speed;
+      this.type = type;
+      this.objs.css({
+        position : 'absolute',
+        top : y,
+        left : x,
+        width : 100,
+        height : 50
+      });
+    };
+    Enemy.prototype.hited = function(damage) {
+      if(this.hp){
+        this.hp = this.hp-damage;
+        if(this.hp < 1){
+          return 'dead';
+        }else {
+          return 'alive';
+        }
+      }
+    };
+    Enemy.prototype.move = function () {
+      this.objs.css({
+        left : parseInt(this.objs.css('left')) - this.speed
+      });
+    };
+
+    Enemy.prototype.getX = function () {
+      return parseInt(this.objs.css('left'));
+    };
+
+    Enemy.prototype.getY = function () {
+      return parseInt(this.objs.css('top'));
+    };
+
+    Enemy.prototype.getID = function () {
+      return this.objs.attr('id');
+    };
+  </script>
+
+  <style>
+    body {
+      left: 0;
+      background-image: url('./intro_backs.jpg');
+      background-repeat: repeat;
+      background-size: 300px;
+      background-attachment: inherit;
+      position: relative;
+    }
+    div#top {
+      width: 100%;
+      height: 20%;
+      min-height: 100px;
+    }
+    div#center {
+      width: 30%;
+    }
+    div#top > h2 {
+      position: absolute;
+      left : 0;
+      opacity: 0.0;
+      filter:alpha(opacity=00);
+      font-family: '궁서체';
+      font-weight: bolder;
+      width: 90%;
+      font-size: 65px;
+      margin: 0 auto;
+      line-height: 100px;
+    }
+    img {
+      max-width: 100px;
+      max-height: 100px;
+    }
+    #back {
+      opacity: 0;
+      padding: 5px;
+      border: 0.5px solid black;
+      border-radius: 20px 0 0 20px;
+      width : 100px;
+      position: fixed;
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      background-color: #ffffffaa;
+      text-align: center;
+    }
+    .gameWindow {
+      position: relative;
+      overflow: hidden;
+      margin: 0;
+      min-width: 100%;
+      min-height: 500px;
+      background-color: #ffffff;
+      border: 0.5px solid black;
+      text-align: center;
+      font-size: 40px;
+      opacity: 0;
+      cursor: url(./cursor.cur), auto;
+    }
+    .gameWindow * {
+      -ms-user-select: none;
+       -moz-user-select: -moz-none;
+       -khtml-user-select: none;
+       -webkit-user-select: none;
+       user-select: none;
+    }
+    #startBtn {
+      font-family: '궁서체';
+      border: 1px solid black;
+      border-radius: 5px;
+      margin: auto;
+      max-width: 100px;
+      max-height: 50px;
+    }
+    #nowLv {
+      margin: 10px;
+      float: left;
+    }
+    #score {
+      margin: 10px;
+      float: right;
+    }
+    #right {
+      border: 0.5px solid black;
+      width: 60%;
+      height: 100px;
+      top: 50px;
+      left : auto;
+      display: table;
+      margin-top: 20px;
+      margin-left: auto;
+      margin-right: auto;
+      background-color: #ffffff;
+      padding: 15px;
+      opacity: 0
+    }
+    .focused{
+      border: 3px solid red;
+    }
+    #right > * {
+      margin : 10px;
+    }
+    #nextLv {
+      border: 0.5px solid black;
+      background-color: #ffffffaa;
+    }
+    #nLvBtn {
+      border: 0.5px dotted black;
+      background-color: #999999aa;
+    }
+  </style>
+
+</head>
+<body>
+  <div id="back">
+    메뉴로 이동
+  </div>
+  <!-- [S]TOP -->
+  <div id="top">
+    <h2 class="title">괴기 잡이</h2>
+
+  </div>
+  <!-- [E]TOP -->
+  <div id="middle">
+    <div id="left">
+      <span id="log"></span>
+
+    </div>
+    <div id="center" class="gameWindow">
+      <br>
+      <br>
+      <br>
+      몰려드는 고기를 눌러 잡으시오.
+      <br>
+      <br>
+      <br>
+      <div id="startBtn">
+        시작
+      </div>
+    </div>
+    <div id="right">
+
+    </div>
+  </div>
+  <div id="bottom">
+  </div>
+</body>

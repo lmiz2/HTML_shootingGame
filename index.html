@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+  <meta name="description" content="made by SongHyeonSeok.">
+  <!-- <link rel="stylesheet" type="text/css" href="style.css"> -->
+
+  <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+  <script type="text/javascript">
+  window.onload = function(){
+    var title = $('.title');
+    var login_window = $('.login');
+    var signUp_window = $('.signUp');
+    title.animate({
+      opacity:1
+    },1200,function(){
+      title.animate({
+        top : 50
+      },500,function(){
+        openWindow(login_window);
+      });
+    });
+
+    login_window.on('click','input',function(){
+      var $this = $(this);
+      if($this.attr('id')=='login_submit'){
+        $('body *').animate({
+          opacity : 0,
+          left : 0
+        },1000,function(){
+          //로그인 validation 체크 후 다음페이지로 갈 코드
+          window.location.replace('./menu.html');
+        });
+      } else if($this.attr('id') == 'sign_up') {
+        closeWindow(login_window);
+        var timerID = setTimeout(function(){
+          openWindow(signUp_window);
+        },600,function(){
+          clearTimeout(timerID);
+        });
+      }
+    });
+
+    signUp_window.on('click','input',function(){
+      var $this = $(this);
+      if($this.attr('id') == 'signUp_submit'){
+        //발리데이션 체크
+        closeWindow(signUp_window);
+        var timerID = setTimeout(function(){
+          openWindow(login_window);
+        },600,function(){
+          clearTimeout(timerID);
+        });
+      } else if ($this.attr('id') == 'signUp_cancel'){
+        closeWindow(signUp_window);
+        var timerID = setTimeout(function(){
+          openWindow(login_window);
+        },600,function(){
+          clearTimeout(timerID);
+        });
+      }
+    });
+  };
+
+  function closeWindow(window1){
+    window1.animate({
+      width : 0,
+      height : 0
+    },500,function(){
+      window1.css({
+        opacity : 0
+      });
+    });
+  }
+
+  function openWindow(window1){
+    window1.css('opacity', '1')
+    if(window1.hasClass('signUp')){
+      window1.animate({
+        width : '30%',
+        height : 155
+      });
+    } else {
+      window1.animate({
+        width : '30%',
+        height : 125
+      });
+    }
+  }
+  </script>
+
+  <style>
+    body {
+      background-image: url('./intro_backs.jpg');
+      background-repeat: repeat;
+      background-size: 300px;
+      background-attachment: inherit;
+      position: relative;
+    }
+    div#top {
+      width: 100%;
+      height: 20%;
+    }
+    div#center {
+      width: 30%;
+    }
+    div#center > h1 {
+      position: absolute;
+      left : 34%;
+      opacity: 0.0;
+      filter:alpha(opacity=00);
+      font-family: '휴먼둥근헤드라인';
+      width: 90%;
+      font-size: 65px;
+      margin: 0 auto;
+      top : 200px;
+      line-height: 100px;
+    }
+
+    .box {
+      border: 0.6px solid black;
+      border-radius: 10px;
+      padding: 5px;
+      width: 0;
+      background-color: #ffffffaa;
+      opacity: 0;
+      position: absolute;
+      left: 35%;
+      top: 220px;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+    /* .signUp.box {
+      border: 0.6px solid black;
+      border-radius: 10px;
+      padding: 5px;
+      width: 0;
+      background-color: #ffffffaa;
+      opacity: 0;
+      position: absolute;
+      left: 35%;
+      top: 220px;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    } */
+
+    form.box > input {
+      margin: 5px;
+      width: 95%;
+    }
+
+  </style>
+
+</head>
+<body>
+  <!-- [S]TOP -->
+  <div id="top">
+
+  </div>
+  <!-- [E]TOP -->
+  <div id="middle">
+    <div id="left">
+
+    </div>
+    <div id="center">
+      <h1 class="title">MINIGAME</h1>
+      <form class="login box">
+        <input type="text" id="login_ID" placeholder="ID.."><br>
+        <input type="password" id="login_pwd" placeholder="PASSWORD.."><br>
+        <input type="button" id="login_submit" value="로그인"
+        style="font-family:휴먼둥근헤드라인; background-color:#eff7f9; border:0.5 solid #A0DBE4">
+        <input type="button" id="sign_up" value="회원가입"
+        style="font-family:휴먼둥근헤드라인; background-color:#eff7f9; border:0.5 solid #A0DBE4">
+      </form>
+      <form class="signUp box">
+        <input type="text" id="signUp_ID" placeholder="희망하는 ID를 입력하세요."><br>
+        <input type="password" id="signUp_pwd" placeholder="PASSWORD를 입력하세요."><br>
+        <input type="email" id="signUp_email" placeholder="E-Mail을 입력하세요."><br>
+        <input type="button" id="signUp_submit" value="가입 완료!"
+        style="font-family:휴먼둥근헤드라인; background-color:#eff7f9; border:0.5 solid #A0DBE4">
+        <input type="button" id="signUp_cancel" value="로그인 창으로"
+        style="font-family:휴먼둥근헤드라인; background-color:#eff7f9; border:0.5 solid #A0DBE4">
+      </form>
+    </div>
+    <div id="right">
+
+    </div>
+  </div>
+  <div id="bottom">
+
+  </div>
+</body>
